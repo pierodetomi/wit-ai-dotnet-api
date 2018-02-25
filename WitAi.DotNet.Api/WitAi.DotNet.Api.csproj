@@ -5,6 +5,13 @@
     <Authors>Piero De Tomi</Authors>
     <Company>Piero De Tomi</Company>
     <Description>A .NET library that implements most of wit.ai API calls.</Description>
+    <PackageIconUrl>https://raw.githubusercontent.com/pierodetomi/wit-ai-dotnet-api/master/__assets/package-logo.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/pierodetomi/wit-ai-dotnet-api</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageProjectUrl>https://github.com/pierodetomi/wit-ai-dotnet-api</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/pierodetomi/wit-ai-dotnet-api/master/LICENSE</PackageLicenseUrl>
+    <PackageTags>.net, c#, wit.ai, api</PackageTags>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
