@@ -13,98 +13,53 @@ namespace WitAi.DotNet.Api
     {
         private const string BASE_API_URL = "https://api.wit.ai";
 
+        private const string DEFAULT_API_VERSION = "20170307";
+
         private string ApiVersion { get; set; }
 
         public WitAiApi()
         {
-            ApiVersion = "20170307";
+            ApiVersion = DEFAULT_API_VERSION;
         }
 
         public WitAiApi(string apiVersion)
         {
+            if (String.IsNullOrEmpty(apiVersion))
+                throw new Exception("apiVersion parameter must be specified");
+
             ApiVersion = apiVersion;
         }
 
         public async Task<CreateWitAppResponse> CreateApp(CreateWitAppRequest request)
         {
-            CreateWitAppResponse response = null;
-
-            using (HttpClient http = new HttpClient())
-            {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/apps?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.PostAsJsonAsync(url, request);
-
-                response = await GetResponse<CreateWitAppResponse>(apiResponse);
-            }
-
-            return response;
+            string url = $"{BASE_API_URL}/apps?v={ApiVersion}";
+            return await Post<CreateWitAppRequest, CreateWitAppResponse>(url, request);
         }
 
         public async Task<DeleteWitAppResponse> DeleteApp(DeleteWitAppRequest request)
         {
-            DeleteWitAppResponse response = null;
-
-            using (HttpClient http = new HttpClient())
-            {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/apps/{request.AppId}?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.DeleteAsync(url);
-
-                response = await GetResponse<DeleteWitAppResponse>(apiResponse);
-            }
-
-            return response;
+            string url = $"{BASE_API_URL}/apps/{request.AppId}?v={ApiVersion}";
+            return await Delete<DeleteWitAppRequest, DeleteWitAppResponse>(url, request);
         }
 
         public async Task<AddWitEntityResponse> AddEntity(AddWitEntityRequest request)
         {
-            AddWitEntityResponse response = null;
-
-            using (HttpClient http = new HttpClient())
-            {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/entities?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.PostAsJsonAsync(url, request);
-
-                response = await GetResponse<AddWitEntityResponse>(apiResponse);
-            }
-
-            return response;
+            string url = $"{BASE_API_URL}/entities?v={ApiVersion}";
+            return await Post<AddWitEntityRequest, AddWitEntityResponse>(url, request);
         }
 
         public async Task<GetWitEntityResponse> GetEntity(GetWitEntityRequest request)
         {
-            GetWitEntityResponse response = null;
-
-            using (HttpClient http = new HttpClient())
-            {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/entities/{request.EntityNameOrId}?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.GetAsync(url);
-
-                response = await GetResponse<GetWitEntityResponse>(apiResponse);
-            }
-
-            return response;
+            string url = $"{BASE_API_URL}/entities/{request.EntityNameOrId}?v={ApiVersion}";
+            return await Get<GetWitEntityRequest, GetWitEntityResponse>(url, request);
         }
 
         public async Task<GetWitEntitiesResponse> GetEntities(GetWitEntitiesRequest request)
         {
-            GetWitEntitiesResponse response = null;
-
-            using (HttpClient http = new HttpClient())
+            string url = $"{BASE_API_URL}/entities?v={ApiVersion}";
+            return await Get(url, request, async apiResponse =>
             {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/entities?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.GetAsync(url);
-
-                response = new GetWitEntitiesResponse
+                return new GetWitEntitiesResponse
                 {
                     IsSuccessful = apiResponse.IsSuccessStatusCode,
                     ErrorMessage = !apiResponse.IsSuccessStatusCode
@@ -114,58 +69,87 @@ namespace WitAi.DotNet.Api
                         ? await apiResponse.Content.ReadAsAsync<List<string>>()
                         : null,
                 };
-            }
-
-            return response;
+            });
         }
 
         public async Task<DeleteWitEntityResponse> DeleteEntity(DeleteWitEntityRequest request)
         {
-            DeleteWitEntityResponse response = null;
-
-            using (HttpClient http = new HttpClient())
-            {
-                SetupHeaders(http, request.AccessToken);
-
-                string url = $"{BASE_API_URL}/entities/{request.EntityNameOrId}?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.DeleteAsync(url);
-
-                response = await GetResponse<DeleteWitEntityResponse>(apiResponse);
-            }
-
-            return response;
+            string url = $"{BASE_API_URL}/entities/{request.EntityNameOrId}?v={ApiVersion}";
+            return await Delete<DeleteWitEntityRequest, DeleteWitEntityResponse>(url, request);
         }
 
         public async Task<TrainWitAppResponse> Train(TrainWitAppRequest request)
         {
-            TrainWitAppResponse response = null;
+            string url = $"{BASE_API_URL}/samples?v={ApiVersion}";
+            return await Post<TrainWitAppRequest, TrainWitAppResponse>(url, request, request.Samples);
+        }
+
+        public async Task<ParseWitMessageResponse> ParseMessage(ParseWitMessageRequest request)
+        {
+            string query = Uri.EscapeDataString(request.Message);
+            string url = $"{BASE_API_URL}/message?v={ApiVersion}&q={query}";
+
+            return await Get<ParseWitMessageRequest, ParseWitMessageResponse>(url, request);
+        }
+
+        private async Task<TResponse> Get<TRequest, TResponse>(string url, TRequest request, Func<HttpResponseMessage, Task<TResponse>> customGetResponse = null)
+            where TRequest : BaseWitRequest
+            where TResponse : BaseWitResponse, new()
+        {
+            TResponse response = default(TResponse);
 
             using (HttpClient http = new HttpClient())
             {
                 SetupHeaders(http, request.AccessToken);
 
-                string url = $"{BASE_API_URL}/samples?v={ApiVersion}";
-                HttpResponseMessage apiResponse = await http.PostAsJsonAsync(url, request.Samples);
+                HttpResponseMessage apiResponse = await http.GetAsync(url);
 
-                response = await GetResponse<TrainWitAppResponse>(apiResponse);
+                response = customGetResponse == null
+                    ? await GetResponse<TResponse>(apiResponse)
+                    : await customGetResponse(apiResponse);
             }
 
             return response;
         }
 
-        public async Task<ParseWitMessageResponse> ParseMessage(ParseWitMessageRequest request)
+        private async Task<TResponse> Post<TRequest, TResponse>(string url, TRequest request)
+            where TRequest : BaseWitRequest
+            where TResponse : BaseWitResponse, new()
         {
-            ParseWitMessageResponse response = null;
+            return await Post<TRequest, TResponse>(url, request, request);
+        }
+
+        private async Task<TResponse> Post<TRequest, TResponse>(string url, TRequest request, object body)
+            where TRequest : BaseWitRequest
+            where TResponse : BaseWitResponse, new()
+        {
+            TResponse response = default(TResponse);
 
             using (HttpClient http = new HttpClient())
             {
                 SetupHeaders(http, request.AccessToken);
 
-                string query = Uri.EscapeDataString(request.Message);
-                string url = $"{BASE_API_URL}/message?v={ApiVersion}&q={query}";
-                HttpResponseMessage apiResponse = await http.GetAsync(url);
+                HttpResponseMessage apiResponse = await http.PostAsJsonAsync(url, body);
 
-                response = await GetResponse<ParseWitMessageResponse>(apiResponse);
+                response = await GetResponse<TResponse>(apiResponse);
+            }
+
+            return response;
+        }
+
+        private async Task<TResponse> Delete<TRequest, TResponse>(string url, TRequest request)
+            where TRequest : BaseWitRequest
+            where TResponse : BaseWitResponse, new()
+        {
+            TResponse response = default(TResponse);
+
+            using (HttpClient http = new HttpClient())
+            {
+                SetupHeaders(http, request.AccessToken);
+
+                HttpResponseMessage apiResponse = await http.DeleteAsync(url);
+
+                response = await GetResponse<TResponse>(apiResponse);
             }
 
             return response;
