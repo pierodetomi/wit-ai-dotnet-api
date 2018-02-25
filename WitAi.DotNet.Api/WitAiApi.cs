@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WitAi.DotNet.Api.Extensions;
+using WitAi.DotNet.Api.Models.Domain;
 using WitAi.DotNet.Api.Models.Request;
 using WitAi.DotNet.Api.Models.Response;
 
@@ -89,7 +92,54 @@ namespace WitAi.DotNet.Api
             string query = Uri.EscapeDataString(request.Message);
             string url = $"{BASE_API_URL}/message?v={ApiVersion}&q={query}";
 
-            return await Get<ParseWitMessageRequest, ParseWitMessageResponse>(url, request);
+            return await Get<ParseWitMessageRequest, ParseWitMessageResponse>(url, request, async (apiResponse) =>
+            {
+                ParseWitMessageResponse response = new ParseWitMessageResponse { IsSuccessful = apiResponse.IsSuccessStatusCode };
+
+                if(!response.IsSuccessful)
+                {
+                    response.ErrorMessage = await apiResponse.Content.ReadAsStringAsync();
+                    return response;
+                }
+                
+                JObject jObject = await apiResponse.Content.ReadAsAsync<JObject>();
+                response.MessageId = jObject.GetValue("msg_id").Value<string>();
+                response.Text = jObject.GetValue("_text").Value<string>();
+                IJEnumerable<JToken> jEntities = jObject.GetValue("entities").AsJEnumerable();
+
+                foreach(JToken jEntity in jEntities)
+                {
+                    WitParsedEntity entity = new WitParsedEntity
+                    {
+                        EntityName = jEntity.Path.Split('.').Last()
+                    };
+
+                    IJEnumerable<JToken> jValues = jEntity.First.AsJEnumerable();
+
+                    foreach(JToken jValue in jValues)
+                    {
+                        WitParsedEntityValue value = null;
+                        
+                        try
+                        {
+                            value = jValue.ToObject<WitParsedEntityValue>();
+                            value.EntityValueJson = jValue.ToString();
+                        }
+                        catch
+                        {
+                            // Fallback
+                            value = new WitParsedEntityValue { };
+                            value.EntityValueJson = jValue.ToString();
+                        }
+
+                        entity.Values.Add(value);
+                    }
+
+                    response.Entities.Add(entity);
+                }
+
+                return response;
+            });
         }
 
         private async Task<TResponse> Get<TRequest, TResponse>(string url, TRequest request, Func<HttpResponseMessage, Task<TResponse>> customGetResponse = null)

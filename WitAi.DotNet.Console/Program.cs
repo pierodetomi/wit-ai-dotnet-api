@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using WitAi.DotNet.Api;
 using WitAi.DotNet.Api.Models.Domain;
@@ -14,9 +15,9 @@ namespace WitAi.DotNet.Console
             Task.Run(async () =>
             {
                 WitAiApi witApi = new WitAiApi();
-                string accessToken = "{YOUR_ACCESS_TOKEN_HERE}";
-
-                CreateWitAppResponse cAppResponse = await witApi.CreateApp(new CreateWitAppRequest(accessToken) { AppName = "refactoring_test", LanguageCode = "it", IsPrivate = true });
+                string serverAccessToken = "{YOUR_ACCESS_TOKEN_HERE}";
+                
+                CreateWitAppResponse cAppResponse = await witApi.CreateApp(new CreateWitAppRequest(serverAccessToken) { AppName = "refactoring_test", LanguageCode = "it", IsPrivate = true });
 
                 if (!cAppResponse.IsSuccessful)
                     return;
@@ -53,7 +54,6 @@ namespace WitAi.DotNet.Console
                             Text = "Il mio nome è Jack",
                             Entities = new List<WitSampleEntity>
                             {
-                                //new WitSampleEntity("intent", "specify_name"),
                                 new WitSampleEntity("user_name", "Jack", "Il mio nome è Jack".IndexOf("Jack"), "Il mio nome è Jack".IndexOf("Jack") + "Jack".Length)
                             }
                         }
@@ -64,6 +64,20 @@ namespace WitAi.DotNet.Console
                     return;
 
                 System.Console.WriteLine("[OK] App trained");
+
+                System.Console.WriteLine(" *** Waiting about 20 seconds for app changes to take effect ...");
+                Thread.Sleep(20000);
+
+                ParseWitMessageResponse parseResponse = await witApi.ParseMessage(new ParseWitMessageRequest(cAppResponse.AccessToken)
+                {
+                    Message = "Il mio nome è Roy",
+                    Verbose = true
+                });
+
+                if (!parseResponse.IsSuccessful)
+                    return;
+
+                System.Console.WriteLine("[OK] Message parsed");
 
                 DeleteWitEntityResponse deleteEntityResponse = await witApi.DeleteEntity(new DeleteWitEntityRequest(cAppResponse.AccessToken) { EntityNameOrId = "user_name" });
 
