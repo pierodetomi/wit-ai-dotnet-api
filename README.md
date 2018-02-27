@@ -1,5 +1,5 @@
 # WitAi .NET Api Client
-This .NET library implements most (not all) of wit.ai API features, for details please refer to the [official documentation](https://wit.ai/docs/http/20170307).
+This .NET library implements most (not all) of wit.ai API features, for details please refer to the [official api documentation](https://wit.ai/docs/http/20170307).
 
 ## Install
 The library is also available as [**NuGet Package**](https://www.nuget.org/packages/WitAi.DotNet.Api), you can add the dependency to your project using *NuGet package manager*:
@@ -12,7 +12,7 @@ PM> Install-Package WitAi.DotNet.Api -Version 1.1.0
 ## How to use it
 
 ### Get an API instance
-First you need to construct an instance of the **WitAiApi** class, using either the empty ctor or the one with the api version parameter:
+First you need to construct an instance of the ```WitAiApi``` class, using either the empty ctor or the one with the api version parameter:
 
 ```csharp
 WitAiApi api = new WitAiApi();
@@ -27,13 +27,13 @@ WitAiApi api = new WitAiApi(apiVersion: "20170307");
 If you use the empty constructor, the api version used will be the ```20170307```, that is currently the latest available (at the time I'm writing this README).
 
 ### Calling an API method
-Every method exposed by the API class takes a *request model* as input and returns a *response model*.
+Every method exposed by the ```WitAiApi``` class takes a *request model* as input and returns a *response model*.
 
 #### Request Models
 Every request model extends the base request model ```BaseWitRequest```, which exposes a single property ```AccessToken```, that *MUST* have a value when the api method is called, since this access token will be used to authorize the request.
 
 #### Response Models
-Every response model extends the base response model ```BaseWitResponse```, which exposes the common properties ```IsSuccessful``` and ```ErrorMessage```, that can be used to check whether the API call was successful or not, exposing the error returned by the API in case of error.
+Every response model extends the base response model ```BaseWitResponse```, which exposes the properties ```IsSuccessful``` and ```ErrorMessage``` (properties that will be available in all responses), that can be used to check whether the API request was successful or not, exposing the error returned by the API in case of error.
 
 #### Example Request
 In the following example we're creating an entity: the *request model* is an ```AddWitEntityRequest``` and the *response model* is an ```AddWitEntityResponse```:
