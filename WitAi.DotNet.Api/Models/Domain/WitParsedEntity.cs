@@ -1,16 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace WitAi.DotNet.Api.Models.Domain
 {
     public class WitParsedEntity
     {
-        public string EntityName { get; set; }
+        [JsonProperty("confidence")]
+        public decimal Confidence { get; set; }
 
-        public List<WitParsedEntityValue> Values { get; set; }
+        [JsonProperty("suggested")]
+        public bool? IsSuggested { get; set; }
 
-        public WitParsedEntity()
-        {
-            Values = new List<WitParsedEntityValue> { };
-        }
+        [JsonProperty("value")]
+        public object Value { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("start")]
+        public int? Start { get; set; }
+
+        [JsonProperty("end")]
+        public int? End { get; set; }
+
+        [JsonProperty("body")]
+        public int? Body { get; set; }
+
+        [JsonProperty("entities")]
+        public Dictionary<string, List<WitParsedEntity>> Entities { get; set; }
     }
 }

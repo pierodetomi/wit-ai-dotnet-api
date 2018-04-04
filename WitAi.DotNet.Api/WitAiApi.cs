@@ -92,51 +92,13 @@ namespace WitAi.DotNet.Api
             string query = Uri.EscapeDataString(request.Message);
             string url = $"{BASE_API_URL}/message?v={ApiVersion}&q={query}";
 
-            return await Get<ParseWitMessageRequest, ParseWitMessageResponse>(url, request, async (apiResponse) =>
+            return await Get(url, request, async (apiResponse) =>
             {
-                ParseWitMessageResponse response = new ParseWitMessageResponse { IsSuccessful = apiResponse.IsSuccessStatusCode };
+                ParseWitMessageResponse response = await apiResponse.Content.ReadAsAsync<ParseWitMessageResponse>();
+                response.IsSuccessful = apiResponse.IsSuccessStatusCode;
 
-                if(!response.IsSuccessful)
-                {
+                if (!response.IsSuccessful)
                     response.ErrorMessage = await apiResponse.Content.ReadAsStringAsync();
-                    return response;
-                }
-                
-                JObject jObject = await apiResponse.Content.ReadAsAsync<JObject>();
-                response.MessageId = jObject.GetValue("msg_id").Value<string>();
-                response.Text = jObject.GetValue("_text").Value<string>();
-                IJEnumerable<JToken> jEntities = jObject.GetValue("entities").AsJEnumerable();
-
-                foreach(JToken jEntity in jEntities)
-                {
-                    WitParsedEntity entity = new WitParsedEntity
-                    {
-                        EntityName = jEntity.Path.Split('.').Last()
-                    };
-
-                    IJEnumerable<JToken> jValues = jEntity.First.AsJEnumerable();
-
-                    foreach(JToken jValue in jValues)
-                    {
-                        WitParsedEntityValue value = null;
-                        
-                        try
-                        {
-                            value = jValue.ToObject<WitParsedEntityValue>();
-                            value.EntityValueJson = jValue.ToString();
-                        }
-                        catch
-                        {
-                            // Fallback
-                            value = new WitParsedEntityValue { };
-                            value.EntityValueJson = jValue.ToString();
-                        }
-
-                        entity.Values.Add(value);
-                    }
-
-                    response.Entities.Add(entity);
-                }
 
                 return response;
             });

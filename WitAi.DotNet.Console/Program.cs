@@ -16,7 +16,7 @@ namespace WitAi.DotNet.Console
             {
                 WitAiApi witApi = new WitAiApi();
                 string serverAccessToken = "{YOUR_ACCESS_TOKEN_HERE}";
-                
+
                 CreateWitAppResponse cAppResponse = await witApi.CreateApp(new CreateWitAppRequest(serverAccessToken) { AppName = "refactoring_test", LanguageCode = "it", IsPrivate = true });
 
                 if (!cAppResponse.IsSuccessful)
