@@ -5,7 +5,7 @@ This .NET library implements most (not all) of wit.ai API features, for details 
 The library is also available as [**NuGet Package**](https://www.nuget.org/packages/WitAi.DotNet.Api), you can add the dependency to your project using *NuGet package manager*:
 
 ```bat
-PM> Install-Package WitAi.DotNet.Api -Version 1.1.0
+PM> Install-Package WitAi.DotNet.Api -Version 1.3.0
 ```
 
 
