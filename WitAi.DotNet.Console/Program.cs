@@ -24,6 +24,13 @@ namespace WitAi.DotNet.Console
 
                 System.Console.WriteLine("[OK] App created");
 
+                UpdateWitAppResponse updateAppResponse = await witApi.UpdateApp(new UpdateWitAppRequest(cAppResponse.AccessToken, cAppResponse.AppId, "app-modified") { LanguageCode = "en" });
+
+                if (!updateAppResponse.IsSuccessful)
+                    return;
+
+                System.Console.WriteLine("[OK] App updated");
+
                 AddWitEntityResponse aweResponse = await witApi.AddEntity(new AddWitEntityRequest(cAppResponse.AccessToken) { EntityName = "user_name", Description = "The name of the user that is texting with the bot" });
                 
                 if (!aweResponse.IsSuccessful)

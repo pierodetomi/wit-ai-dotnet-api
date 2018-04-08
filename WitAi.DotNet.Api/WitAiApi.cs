@@ -1,12 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WitAi.DotNet.Api.Extensions;
-using WitAi.DotNet.Api.Models.Domain;
 using WitAi.DotNet.Api.Models.Request;
 using WitAi.DotNet.Api.Models.Response;
 
@@ -37,6 +34,12 @@ namespace WitAi.DotNet.Api
         {
             string url = $"{BASE_API_URL}/apps?v={ApiVersion}";
             return await Post<CreateWitAppRequest, CreateWitAppResponse>(url, request);
+        }
+
+        public async Task<UpdateWitAppResponse> UpdateApp(UpdateWitAppRequest request)
+        {
+            string url = $"{BASE_API_URL}/apps/{request.AppId}?v={ApiVersion}";
+            return await Put<UpdateWitAppRequest, UpdateWitAppResponse>(url, request);
         }
 
         public async Task<DeleteWitAppResponse> DeleteApp(DeleteWitAppRequest request)
@@ -142,6 +145,24 @@ namespace WitAi.DotNet.Api
                 SetupHeaders(http, request.AccessToken);
 
                 HttpResponseMessage apiResponse = await http.PostAsJsonAsync(url, body);
+
+                response = await GetResponse<TResponse>(apiResponse);
+            }
+
+            return response;
+        }
+
+        private async Task<TResponse> Put<TRequest, TResponse>(string url, TRequest request)
+            where TRequest : BaseWitRequest
+            where TResponse : BaseWitResponse, new()
+        {
+            TResponse response = default(TResponse);
+
+            using (HttpClient http = new HttpClient())
+            {
+                SetupHeaders(http, request.AccessToken);
+
+                HttpResponseMessage apiResponse = await http.PutAsJsonAsync(url, request);
 
                 response = await GetResponse<TResponse>(apiResponse);
             }

@@ -63,6 +63,7 @@ else {
 The following API requests are covered by this library:
 
 - ```CreateApp``` ([POST /apps](https://wit.ai/docs/http/20170307#post--apps-link))
+- ```UpdateApp``` ([PUT /apps/:app-id](https://wit.ai/docs/http/20170307#put--apps-:app-id-link))
 - ```DeleteApp``` ([DELETE /apps/:app-id](https://wit.ai/docs/http/20170307#delete--apps-:app-id-link))
 - ```AddEntity``` ([POST /entities](https://wit.ai/docs/http/20170307#post--entities-link))
 - ```GetEntity``` ([GET /entities/:entity-id](https://wit.ai/docs/http/20170307#get--entities-:entity-id-link))
